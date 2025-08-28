@@ -1,4 +1,6 @@
 import streamlit as st
+import datetime
+
 
 # Page config
 st.set_page_config(page_title="Docubot", page_icon="🤖", layout="centered")
@@ -22,6 +24,7 @@ st.title("💬 Chat with Docubot")
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
+        
 
 # User input box
 if prompt := st.chat_input("Ask me anything about your documents..."):
