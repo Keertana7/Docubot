@@ -1,32 +1,32 @@
-# Docubot: AI Chatbot using Retrieval-Augmented Generation (RAG)
+# 🤖 Docubot: AI Chatbot using Retrieval-Augmented Generation (RAG)
 
-**Docubot** is a modular AI chatbot system that answers questions from documentation using semantic search and embeddings (RAG).
-
----
-
-## Features
-
-- **Semantic Search** using FAISS vector index  
-- **Document Chunking** for efficient retrieval  
-- **Pre-generated Embeddings** with Sentence Transformers  
-- **Single-Question Query Support** (multi-turn chat planned)  
-- **Streamlit Frontend** for interactive queries  
+**Docubot** is a modular AI chatbot that answers questions from documentation using a Retrieval-Augmented Generation (RAG) pipeline.  
+It combines semantic search (via FAISS) with generative summarization (via FLAN-T5) to deliver clear, level-adaptive explanations.
 
 ---
 
-## How It Works
+## 🌟 Features
 
-The system processes a user query in the following steps:
-
-1. Convert the query into an embedding using `all-MiniLM-L6-v2`.  
-2. Perform a similarity search in the FAISS index.  
-3. Retrieve the most relevant document chunks.  
-4. Generate an answer using the retrieved context.  
-5. Return the answer via the backend or Streamlit frontend.
+- **Semantic Search** powered by FAISS vector index  
+- **Document Chunking** for efficient information retrieval  
+- **Pre-generated Embeddings** using Sentence Transformers (`all-MiniLM-L6-v2`)  
+- **Level-Based Answers:** Beginner, Intermediate, and Expert modes  
+- **Streamlit Frontend** for interactive Q&A  
+- **Single-Question Query Support** *(multi-turn chat planned)*  
 
 ---
 
-## Usage
+## ⚙️ How It Works
+
+1. The user query is converted into an embedding using `all-MiniLM-L6-v2`.  
+2. The FAISS index searches for semantically similar document chunks.  
+3. The top chunks are retrieved and passed as context.  
+4. The `flan-t5-base` model generates a summarized and level-adapted answer.  
+5. The Streamlit interface displays the final response.  
+
+---
+
+## 🚀 Usage
 
 ### 1. Clone the Repository
 ```bash
@@ -39,29 +39,55 @@ cd Docubot
 pip install -r requirements.txt
 ```
 
-### 3. Run the Backend
-```bash
-python backend/app.py
-```
-
-### 4. Run the Frontend
+### 3. Run the Frontend
 ```bash
 streamlit run frontend/streamlit_app.py
 ```
 
 ---
 
+
 ## Notes
 
-- `knowledge_base/` contains pre-generated chunks, embeddings, and the FAISS index.  
-- `build_index.py` is used to generate chunks and embeddings from a given text.  
-- This version supports **single-question queries**. Multi-turn conversation support is planned for future updates.
+- `data/` contains pre-generated chunks, embeddings, and the FAISS index.  
+- `backend/build_index.py` can be used to regenerate the FAISS index and embeddings from raw text.
+- The current version supports **single-turn queries**; multi-turn conversational memory will be added in a future release.
 
 ---
 
 ## Future Features (Planned)
 
 - Multi-turn conversation support (chat memory)  
-- Level-based answers: Beginner, Intermediate, Expert  
-- Improved explanations and context handling  
-- Frontend UI enhancements (chat bubbles, better interface)
+- Improved summarization and contextual awareness  
+- Enhanced frontend UI with chat bubbles and history
+- Model performance optimization for faster responses
+
+## Project Structure
+```
+Docubot/
+│
+├── backend/
+│   ├── build_index.py          # Script to build FAISS index
+│   └── query_engine.py         # Core retrieval and answer generation logic
+│
+├── data/                       # FAISS index and pre-computed embeddings
+│   ├── chunks.json
+│   ├── chunks_embeddings.npy
+│   └── index.faiss
+│
+├── frontend/
+│   └── streamlit_app.py        # Streamlit-based chat interface
+│
+├── .gitignore
+├── README.md
+└── requirements.txt
+```
+
+## 🧠 Tech Stack
+
+- Python
+- Streamlit
+- Sentence Transformers
+- FAISS
+- Hugging Face Transformers (FLAN-T5)
+
