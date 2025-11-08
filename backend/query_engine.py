@@ -7,10 +7,14 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 # Load FAISS index & data
 # backend/query_engine.py
-DATA_FOLDER = r"D:\Docubot\docs\glossary\data_required\\"
+import os
+
+# Correct path
+DATA_FOLDER = os.path.join(os.path.dirname(__file__), "../data/")  # points to Docubot/data/
 
 
-index = faiss.read_index(DATA_FOLDER + "index.faiss")
+
+index = faiss.read_index(os.path.join(DATA_FOLDER, "index.faiss"))
 embeddings = np.load(DATA_FOLDER + "chunks_embeddings.npy")
 with open(DATA_FOLDER + "chunks.json", "r") as f:
     chunks_list = json.load(f)
