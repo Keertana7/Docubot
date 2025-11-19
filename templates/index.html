@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docubot - Ceph Documentation Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🤖 Docubot</h1>
+                <p>Ask questions about Ceph documentation</p>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-content">
+                    <h2>Settings</h2>
+                    
+                    <!-- Level Selection -->
+                    <div class="control-group">
+                        <label for="level-select">Expertise Level:</label>
+                        <select id="level-select">
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate" selected>Intermediate</option>
+                            <option value="expert">Expert</option>
+                        </select>
+                    </div>
+
+                    <!-- Top K Slider -->
+                    <div class="control-group">
+                        <label for="top-k-slider">Top K Chunks:</label>
+                        <div class="slider-container">
+                            <input type="range" id="top-k-slider" min="1" max="10" value="3">
+                            <span id="top-k-value">3</span>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="status-box">
+                        <p><strong>Status:</strong> <span id="status">Ready</span></p>
+                        <p><strong>Total Chunks:</strong> 5,129</p>
+                        <p><strong>API:</strong> Gemini</p>
+                    </div>
+
+                    <!-- Clear History -->
+                    <button class="btn-clear" onclick="clearHistory()">Clear History</button>
+                </div>
+            </aside>
+
+            <!-- Chat Area -->
+            <main class="chat-area">
+                <!-- Chat History -->
+                <div id="chat-history" class="chat-history">
+                    <div class="welcome-message">
+                        <h2>Welcome to Docubot! 👋</h2>
+                        <p>Ask me anything about Ceph distributed storage system.</p>
+                        <p><em>Examples:</em></p>
+                        <ul>
+                            <li>"What is Ceph?"</li>
+                            <li>"How does CRUSH algorithm work?"</li>
+                            <li>"Explain OSDs in Ceph"</li>
+                            <li>"What is RADOS?"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="input-area">
+                    <div class="input-container">
+                        <input 
+                            type="text" 
+                            id="query-input" 
+                            placeholder="Type your question here..." 
+                            onkeypress="handleKeyPress(event)"
+                        >
+                        <button id="send-btn" class="btn-send" onclick="sendQuery()">
+                            Send
+                        </button>
+                    </div>
+                    <div class="input-hint">
+                        Press Enter or click Send to ask a question
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="spinner" class="spinner hidden">
+        <div class="spinner-inner"></div>
+        <p>Docubot is thinking...</p>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
