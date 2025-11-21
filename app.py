@@ -7,7 +7,12 @@ import os
 from flask import Flask, render_template, request, jsonify
 from backend.query_engine import answer_query
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder="frontend/templates",
+    static_folder="frontend/static"
+)
+
 
 # API key from environment
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
@@ -30,6 +35,17 @@ def chat():
 
         if not query:
             return jsonify({"error": "Empty query"}), 400
+        
+        greetings = ["hi", "hii", "hiii", "hello", "hey", "yo", "hola", "sup", "hie", "hye"]
+        clean_query = query.lower().strip()
+
+        if clean_query in greetings or clean_query.startswith(("hi ", "hello ", "hey ")):
+            return jsonify({
+                "response": "Hey! 👋 How can I help you today?",
+                "level": level,
+                "top_k": top_k
+            }), 200
+
 
         # Validate level
         if level not in ("beginner", "intermediate", "expert"):
