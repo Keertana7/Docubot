@@ -37,6 +37,20 @@
                         </select>
                     </div>
 
+                        <!-- Top-K Slider -->
+                        <div class="control-group">
+                            <label for="top-k-slider">Retrieve Top-K Chunks: <span id="top-k-value">3</span></label>
+                            <div class="slider-container">
+                                <input type="range" id="top-k-slider" min="1" max="10" value="3" />
+                            </div>
+                        </div>
+
+                        <!-- Status Box -->
+                        <div class="status-box">
+                            <p><strong>Status:</strong> <span id="status">Not ready</span></p>
+                            <p style="font-size:0.8rem; color:var(--text-light);">API and service status will appear here.</p>
+                        </div>
+
 
                     <!-- Clear History -->
                     <button class="btn-clear" onclick="clearHistory()">Clear History</button>
