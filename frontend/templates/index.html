@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Docubot - Ceph Documentation Chatbot</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='script.css') }}" />
+    <!-- Markdown renderer and sanitizer (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js" defer></script>
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </head>
 <body>
@@ -34,21 +37,20 @@
                         </select>
                     </div>
 
-                    <!-- Top K Slider -->
-                    <div class="control-group">
-                        <label for="top-k-slider">Top K Chunks:</label>
-                        <div class="slider-container">
-                            <input type="range" id="top-k-slider" min="1" max="10" value="3">
-                            <span id="top-k-value">3</span>
+                        <!-- Top-K Slider -->
+                        <div class="control-group">
+                            <label for="top-k-slider">Retrieve Top-K Chunks: <span id="top-k-value">3</span></label>
+                            <div class="slider-container">
+                                <input type="range" id="top-k-slider" min="1" max="10" value="3" />
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Status -->
-                    <div class="status-box">
-                        <p><strong>Status:</strong> <span id="status">Ready</span></p>
-                        <p><strong>Total Chunks:</strong> 5,129</p>
-                        <p><strong>API:</strong> Gemini</p>
-                    </div>
+                        <!-- Status Box -->
+                        <div class="status-box">
+                            <p><strong>Status:</strong> <span id="status">Not ready</span></p>
+                            <p style="font-size:0.8rem; color:var(--text-light);">API and service status will appear here.</p>
+                        </div>
+
 
                     <!-- Clear History -->
                     <button class="btn-clear" onclick="clearHistory()">Clear History</button>

@@ -20,9 +20,11 @@ let messageCount = 0;
 /**
  * Update Top K display value
  */
-topKSlider.addEventListener("input", (e) => {
-    topKValue.textContent = e.target.value;
-});
+if (topKSlider && topKValue) {
+    topKSlider.addEventListener("input", (e) => {
+        topKValue.textContent = e.target.value;
+    });
+}
 
 /**
  * Handle key press in input (Send on Enter)
@@ -49,8 +51,8 @@ async function sendQuery() {
     }
 
     // Get settings
-    const level = levelSelect.value;
-    const topK = parseInt(topKSlider.value);
+    const level = levelSelect ? levelSelect.value : "intermediate";
+    const topK = topKSlider ? parseInt(topKSlider.value) : 3;
 
     // Add user message to chat
     addMessage("user", query);
@@ -81,22 +83,22 @@ async function sendQuery() {
         // Check if response was successful (both 200 with response field or error field)
         if (response.ok && data.response) {
             addMessage("bot", data.response);
-            statusSpan.textContent = "Ready";
+            if (statusSpan) statusSpan.textContent = "Ready";
         } else if (data.error) {
             addMessage("bot", `Error: ${data.error}`);
-            statusSpan.textContent = "Error";
+            if (statusSpan) statusSpan.textContent = "Error";
         } else if (data.response) {
             // Response may contain error info even in 200 status
             addMessage("bot", data.response);
-            statusSpan.textContent = "Ready";
+            if (statusSpan) statusSpan.textContent = "Ready";
         } else {
             addMessage("bot", "Unexpected response from server");
-            statusSpan.textContent = "Error";
+            if (statusSpan) statusSpan.textContent = "Error";
         }
     } catch (error) {
         console.error("Error:", error);
         addMessage("bot", `❌ Connection error: ${error.message}`);
-        statusSpan.textContent = "Error";
+        if (statusSpan) statusSpan.textContent = "Error";
     } finally {
         setLoading(false);
     }
@@ -144,23 +146,69 @@ function addMessage(role, content) {
  * Format message content (basic markdown-like formatting)
  */
 function formatMessage(content) {
-    // Escape HTML
-    let escaped = document.createElement("div").appendChild(document.createTextNode(content)).parentNode.innerHTML;
+    // If marked and DOMPurify are loaded, use them for robust Markdown rendering + sanitization
+    if (window.marked && window.DOMPurify) {
+        try {
+            const raw = marked.parse(content);
+            return DOMPurify.sanitize(raw);
+        } catch (e) {
+            console.warn('marked parsing failed, falling back to simple formatter', e);
+            // fall through to fallback formatter
+        }
+    }
 
-    // Convert URLs to links
-    escaped = escaped.replace(
-        /(https?:\/\/[^\s]+)/g,
-        '<a href="$1" target="_blank" style="color: #4f46e5; text-decoration: underline;">$1</a>'
-    );
+    // Fallback: Basic Markdown-like formatter
+    const div = document.createElement("div");
+    div.appendChild(document.createTextNode(content));
+    const escaped = div.innerHTML;
 
-    // Convert bold markers (e.g., *text* or _text_)
-    escaped = escaped.replace(/\\(.?)\\*/g, "<strong>$1</strong>");
-    escaped = escaped.replace(/(.*?)/g, "<strong>$1</strong>");
+    // Process line-by-line for block elements
+    const lines = escaped.split(/\n/);
+    let inList = false;
+    const out = [];
 
-    // Convert line breaks to <br>
-    escaped = escaped.replace(/\n/g, "<br>");
+    lines.forEach((line) => {
+        // Headings: #, ##, ### etc.
+        const heading = line.match(/^(#{1,6})\s+(.*)$/);
+        if (heading) {
+            if (inList) { out.push("</ul>"); inList = false; }
+            const level = heading[1].length;
+            out.push(`<h${level}>${heading[2]}</h${level}>`);
+            return;
+        }
 
-    return escaped;
+        // Unordered list items (- or *)
+        const li = line.match(/^\s*[-*]\s+(.*)$/);
+        if (li) {
+            if (!inList) { out.push("<ul>"); inList = true; }
+            out.push(`<li>${li[1]}</li>`);
+            return;
+        } else if (inList) {
+            out.push("</ul>");
+            inList = false;
+        }
+
+        // Blank line -> small break
+        if (line.trim() === "") {
+            out.push("<br>");
+            return;
+        }
+
+        // Inline formatting: code, bold (** or __), italics (* or _), links
+        let processed = line
+            .replace(/`([^`]+)`/g, "<code>$1</code>")
+            .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+            .replace(/__([^_]+)__/g, "<strong>$1</strong>")
+            .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+            .replace(/_([^_]+)_/g, "<em>$1</em>")
+            .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #4f46e5; text-decoration: underline;">$1</a>');
+
+        out.push(`<p>${processed}</p>`);
+    });
+
+    if (inList) out.push("</ul>");
+
+    return out.join("");
 }
 
 /**
@@ -173,7 +221,7 @@ function setLoading(loading) {
 
     if (loading) {
         spinner.classList.remove("hidden");
-        statusSpan.textContent = "Thinking...";
+        if (statusSpan) statusSpan.textContent = "Thinking...";
     } else {
         spinner.classList.add("hidden");
     }
@@ -198,7 +246,7 @@ function clearHistory() {
             </div>
         `;
         messageCount = 0;
-        statusSpan.textContent = "Ready";
+        if (statusSpan) statusSpan.textContent = "Ready";
     }
 }
 
@@ -208,20 +256,15 @@ function clearHistory() {
 function initApp() {
     console.log("Docubot initialized");
     
-    // Check health
+    // Check health (safe: backend /api/health returns basic status)
     fetch("/api/health")
         .then((res) => res.json())
         .then((data) => {
-            if (data.gemini_api_key_set) {
-                statusSpan.textContent = "Ready";
-            } else {
-                statusSpan.textContent = "⚠ API Key not set";
-                console.warn("GEMINI_API_KEY is not set");
-            }
+            if (statusSpan) statusSpan.textContent = "Ready";
         })
         .catch((err) => {
             console.error("Health check failed:", err);
-            statusSpan.textContent = "Error";
+            if (statusSpan) statusSpan.textContent = "Error";
         });
 
     // Focus input on load
