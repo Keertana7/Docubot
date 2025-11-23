@@ -144,23 +144,69 @@ function addMessage(role, content) {
  * Format message content (basic markdown-like formatting)
  */
 function formatMessage(content) {
-    // Escape HTML
-    let escaped = document.createElement("div").appendChild(document.createTextNode(content)).parentNode.innerHTML;
+    // If marked and DOMPurify are loaded, use them for robust Markdown rendering + sanitization
+    if (window.marked && window.DOMPurify) {
+        try {
+            const raw = marked.parse(content);
+            return DOMPurify.sanitize(raw);
+        } catch (e) {
+            console.warn('marked parsing failed, falling back to simple formatter', e);
+            // fall through to fallback formatter
+        }
+    }
 
-    // Convert URLs to links
-    escaped = escaped.replace(
-        /(https?:\/\/[^\s]+)/g,
-        '<a href="$1" target="_blank" style="color: #4f46e5; text-decoration: underline;">$1</a>'
-    );
+    // Fallback: Basic Markdown-like formatter
+    const div = document.createElement("div");
+    div.appendChild(document.createTextNode(content));
+    const escaped = div.innerHTML;
 
-    // Convert bold markers (e.g., *text* or _text_)
-    escaped = escaped.replace(/\\(.?)\\*/g, "<strong>$1</strong>");
-    escaped = escaped.replace(/(.*?)/g, "<strong>$1</strong>");
+    // Process line-by-line for block elements
+    const lines = escaped.split(/\n/);
+    let inList = false;
+    const out = [];
 
-    // Convert line breaks to <br>
-    escaped = escaped.replace(/\n/g, "<br>");
+    lines.forEach((line) => {
+        // Headings: #, ##, ### etc.
+        const heading = line.match(/^(#{1,6})\s+(.*)$/);
+        if (heading) {
+            if (inList) { out.push("</ul>"); inList = false; }
+            const level = heading[1].length;
+            out.push(`<h${level}>${heading[2]}</h${level}>`);
+            return;
+        }
 
-    return escaped;
+        // Unordered list items (- or *)
+        const li = line.match(/^\s*[-*]\s+(.*)$/);
+        if (li) {
+            if (!inList) { out.push("<ul>"); inList = true; }
+            out.push(`<li>${li[1]}</li>`);
+            return;
+        } else if (inList) {
+            out.push("</ul>");
+            inList = false;
+        }
+
+        // Blank line -> small break
+        if (line.trim() === "") {
+            out.push("<br>");
+            return;
+        }
+
+        // Inline formatting: code, bold (** or __), italics (* or _), links
+        let processed = line
+            .replace(/`([^`]+)`/g, "<code>$1</code>")
+            .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+            .replace(/__([^_]+)__/g, "<strong>$1</strong>")
+            .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+            .replace(/_([^_]+)_/g, "<em>$1</em>")
+            .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #4f46e5; text-decoration: underline;">$1</a>');
+
+        out.push(`<p>${processed}</p>`);
+    });
+
+    if (inList) out.push("</ul>");
+
+    return out.join("");
 }
 
 /**
