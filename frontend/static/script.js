@@ -20,9 +20,11 @@ let messageCount = 0;
 /**
  * Update Top K display value
  */
-topKSlider.addEventListener("input", (e) => {
-    topKValue.textContent = e.target.value;
-});
+if (topKSlider && topKValue) {
+    topKSlider.addEventListener("input", (e) => {
+        topKValue.textContent = e.target.value;
+    });
+}
 
 /**
  * Handle key press in input (Send on Enter)
@@ -49,8 +51,8 @@ async function sendQuery() {
     }
 
     // Get settings
-    const level = levelSelect.value;
-    const topK = parseInt(topKSlider.value);
+    const level = levelSelect ? levelSelect.value : "intermediate";
+    const topK = topKSlider ? parseInt(topKSlider.value) : 3;
 
     // Add user message to chat
     addMessage("user", query);
@@ -81,22 +83,22 @@ async function sendQuery() {
         // Check if response was successful (both 200 with response field or error field)
         if (response.ok && data.response) {
             addMessage("bot", data.response);
-            statusSpan.textContent = "Ready";
+            if (statusSpan) statusSpan.textContent = "Ready";
         } else if (data.error) {
             addMessage("bot", `Error: ${data.error}`);
-            statusSpan.textContent = "Error";
+            if (statusSpan) statusSpan.textContent = "Error";
         } else if (data.response) {
             // Response may contain error info even in 200 status
             addMessage("bot", data.response);
-            statusSpan.textContent = "Ready";
+            if (statusSpan) statusSpan.textContent = "Ready";
         } else {
             addMessage("bot", "Unexpected response from server");
-            statusSpan.textContent = "Error";
+            if (statusSpan) statusSpan.textContent = "Error";
         }
     } catch (error) {
         console.error("Error:", error);
         addMessage("bot", `❌ Connection error: ${error.message}`);
-        statusSpan.textContent = "Error";
+        if (statusSpan) statusSpan.textContent = "Error";
     } finally {
         setLoading(false);
     }
@@ -219,7 +221,7 @@ function setLoading(loading) {
 
     if (loading) {
         spinner.classList.remove("hidden");
-        statusSpan.textContent = "Thinking...";
+        if (statusSpan) statusSpan.textContent = "Thinking...";
     } else {
         spinner.classList.add("hidden");
     }
@@ -244,7 +246,7 @@ function clearHistory() {
             </div>
         `;
         messageCount = 0;
-        statusSpan.textContent = "Ready";
+        if (statusSpan) statusSpan.textContent = "Ready";
     }
 }
 
@@ -254,20 +256,15 @@ function clearHistory() {
 function initApp() {
     console.log("Docubot initialized");
     
-    // Check health
+    // Check health (safe: backend /api/health returns basic status)
     fetch("/api/health")
         .then((res) => res.json())
         .then((data) => {
-            if (data.gemini_api_key_set) {
-                statusSpan.textContent = "Ready";
-            } else {
-                statusSpan.textContent = "⚠ API Key not set";
-                console.warn("GEMINI_API_KEY is not set");
-            }
+            if (statusSpan) statusSpan.textContent = "Ready";
         })
         .catch((err) => {
             console.error("Health check failed:", err);
-            statusSpan.textContent = "Error";
+            if (statusSpan) statusSpan.textContent = "Error";
         });
 
     // Focus input on load
