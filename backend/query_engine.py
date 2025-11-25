@@ -164,19 +164,25 @@ def _generate_with_legacy_client(prompt: str):
 
 def answer_query(query: str, level: str = "beginner", top_k: int = 3) -> str:
     """Answer a user query using FAISS retrieval + Gemini generation.
-
+       Returns "data not available" if query is irrelevant to documentation.
     Args:
         query: user question
         level: beginner|intermediate|expert
         top_k: number of retrieved chunks to include
     Returns:
         Generated text (string)
+
     """
+    RELEVANCE_THRESHOLD = 1.20
     # Embed & search
     query_embedding = embedder.encode([query])
     D, I = index.search(np.array(query_embedding).astype("float32"), top_k)
+    # Check relevance using best distance from FAISS
+    best_distance = D[0][0]
+    if best_distance > RELEVANCE_THRESHOLD:
+        return "Sorry, this information is not available in the documentation."
 
-    # Get top chunks
+    # Retrieve top chunks
     top_chunks = [id2chunk.get(str(idx), "") for idx in I[0]]
 
     # Format context
